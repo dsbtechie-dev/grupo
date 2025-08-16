@@ -20,6 +20,7 @@ app.use(express.static('public'));
 let clients = [];
 
 io.on('connection', (socket) => {
+
   // Register the client 
   socket.on('register-client', (client = {}) => {
     client.sid = socket.id;
@@ -31,26 +32,44 @@ io.on('connection', (socket) => {
     
     clients.push(client);
     socket.join(client.uid);
-    console.log(`Client registered: ${client.uid}`);
+    //console.log(`Client registered: ${client.uid}`);
   });
   
+  //get messages and set to proper room
   socket.on('message-client', (message = {}) => {
     const { to } = message;
+    //console.log(`Message to ${to}: ${message}`);
+
     io.to(to).emit('client_message', message);
-  });    
+  }); 
+  
+  socket.on('online-contacts', ({from, contacts}) => {
+    const onlines = [];
+
+    for( const contact of contacts ){
+      const { email } = contact;
+      const iscontact = clients.find( c=> c.email === email );
+
+      if(!iscontact) continue;
+      delete iscontact.sid;
+
+      onlines.push( iscontact );
+
+    }
+
+    io.to(from).emit('contacts_online', onlines);
+  }); 
     
   // Disconnection
   socket.on('disconnect', () => {
     const registered = clients.find(c => c.sid === socket.id);
     if (registered) {
       clients = clients.filter(c => c.sid !== socket.id);
-      console.log(`Client disconnected: ${registered.uid}`);
     }
   });
 });
 
 const PORT = 3000;
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-
+  console.log(`Server running on :${PORT}`);
 });
