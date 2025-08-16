@@ -36,7 +36,6 @@ io.on('connection', (socket) => {
   
   socket.on('message-client', (message = {}) => {
     const { to } = message;
-    console.log(`Message to ${to}: ${message.text}`);
     io.to(to).emit('client_message', message);
   });    
     
@@ -53,4 +52,5 @@ io.on('connection', (socket) => {
 const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+
 });
